@@ -1,0 +1,8 @@
+LICENSE.md
+README.md
+setup.py
+apriltag.egg-info/PKG-INFO
+apriltag.egg-info/SOURCES.txt
+apriltag.egg-info/dependency_links.txt
+apriltag.egg-info/not-zip-safe
+apriltag.egg-info/top_level.txt

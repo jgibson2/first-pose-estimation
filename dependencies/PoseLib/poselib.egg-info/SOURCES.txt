@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+poselib.egg-info/PKG-INFO
+poselib.egg-info/SOURCES.txt
+poselib.egg-info/dependency_links.txt
+poselib.egg-info/not-zip-safe
+poselib.egg-info/top_level.txt

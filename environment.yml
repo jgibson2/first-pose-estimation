@@ -1,0 +1,12 @@
+name: first
+channels:
+    - conda-forge
+dependencies:
+    - python
+    - numpy
+    - pillow
+    - opencv
+    - pip
+    - pip:
+        - onnxruntime
+        - click
