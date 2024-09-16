@@ -64,26 +64,50 @@ if __name__ == "__main__":
         # print('Image points:\n', image_points)
 
         camera = {'model': 'SIMPLE_PINHOLE', 'width': 1280, 'height': 720, 'params': [1146.45, 640.0, 360.0]}
-
         # world to cam
         pose, info = poselib.estimate_absolute_pose(image_points, world_points, camera, {'max_reproj_error': 12.0}, {})
-        print('Pose estimation info: ', info)
-        cam_F_world = np.eye(4)
-        cam_F_world[:3, :3] = pose.R
-        cam_F_world[:3, 3] = pose.t
-        world_F_cam = np.linalg.inv(cam_F_world)
+        # print('Pose estimation info: ', info)
+        cam_F_world_poselib = np.eye(4)
+        cam_F_world_poselib[:3, :3] = pose.R
+        cam_F_world_poselib[:3, 3] = pose.t
+        world_F_cam_poselib = np.linalg.inv(cam_F_world_poselib)
+
+        camera_matrix = np.array([
+            [camera['params'][0], 0.0, camera['params'][1]],
+            [0.0, camera['params'][0], camera['params'][2]],
+            [0.0, 0.0, 1.0]
+        ])
+        # retval, R, t, inliers = cv2.solvePnPRansac(world_points, image_points, camera_matrix, None, flags=cv2.SOLVEPNP_SQPNP)
+        retval, Rs, ts, reproj_errors = cv2.solvePnPGeneric(world_points, image_points, camera_matrix, None, flags=cv2.SOLVEPNP_SQPNP)
+        R, t, _ = sorted(list(zip(Rs, ts, reproj_errors)), key=lambda x: x[2])[0]
+        inliers = np.arange(image_points.shape[0])
 
         t_1 = timeit.default_timer()
         elapsed_time = round((t_1 - t_0) * 10 ** 3, 3)
         print(f"Elapsed time: {elapsed_time} ms")
 
-        cam_origin_in_world = (world_F_cam @ np.array([0.0, 0.0, 0.0, 1.0]).T)[:3]
-        print('Camera origin in world coordinate system:', cam_origin_in_world)
+        if retval:
+            print('[OpenCV] Inliers:', inliers.ravel().tolist())
+            cam_F_world_opencv = np.eye(4)
+            cam_F_world_opencv[:3, :3] = cv2.Rodrigues(R)[0]
+            cam_F_world_opencv[:3, 3] = t.squeeze()
+            world_F_cam_opencv = np.linalg.inv(cam_F_world_opencv)
+            cam_origin_in_world_opencv = (world_F_cam_opencv @ np.array([0.0, 0.0, 0.0, 1.0]).T)[:3]
+            print('[OpenCV] Camera origin in world coordinate system:', cam_origin_in_world_opencv)
+            for det in detections:
+                if det["id"] in tags_transform_map:
+                    pose = tags_transform_map[det["id"]]["pose"]
+                    tag_center = np.array([pose["translation"]["x"], pose["translation"]["y"], pose["translation"]["z"]])
+                    print(f'[OpenCV] Distance to tag {det["id"]} center: ', np.linalg.norm(cam_origin_in_world_opencv - tag_center))
+
+        print('[PoseLib] Inliers:', np.nonzero(info["inliers"])[0].tolist())
+        cam_origin_in_world_poselib = (world_F_cam_poselib @ np.array([0.0, 0.0, 0.0, 1.0]).T)[:3]
+        print('[PoseLib] Camera origin in world coordinate system:', cam_origin_in_world_poselib)
         for det in detections:
             if det["id"] in tags_transform_map:
                 pose = tags_transform_map[det["id"]]["pose"]
                 tag_center = np.array([pose["translation"]["x"], pose["translation"]["y"], pose["translation"]["z"]])
-                print(f'Distance to tag {det["id"]} center: ', np.linalg.norm(cam_origin_in_world - tag_center))
+                print(f'[PoseLib] Distance to tag {det["id"]} center: ', np.linalg.norm(cam_origin_in_world_poselib - tag_center))
 
         image_bgr = cv2.polylines(image_bgr, rect_coords, True, (0, 255, 0), 4)
         cv2.imshow(image_path.name, image_bgr)
