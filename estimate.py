@@ -1,5 +1,7 @@
+import click
 import cv2
 import numpy as np
+from typing import Optional
 from apriltag import apriltag
 import poselib
 import json
@@ -9,10 +11,9 @@ from scipy.spatial.transform import Rotation
 
 TAG_HALF_WIDTH = 0.08255 # half of 6.5 in in meters
 
-if __name__ == "__main__":
-    for image_path in sorted(list(Path('data').glob('*.jpg'))):
+def run_estimates(images_path, transforms_path, show_images):
+    for image_path in sorted(list(images_path.glob('*.jpg')).extend( images_path.glob('*.png'))):
         print(f'Processing image {image_path.name}')
-        transforms_path = Path('data/2024-crescendo.json')
         image = cv2.imread(str(image_path.absolute()), cv2.IMREAD_GRAYSCALE)
         image_bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         with open(transforms_path, 'r') as tf:
@@ -109,10 +110,30 @@ if __name__ == "__main__":
                 tag_center = np.array([pose["translation"]["x"], pose["translation"]["y"], pose["translation"]["z"]])
                 print(f'[PoseLib] Distance to tag {det["id"]} center: ', np.linalg.norm(cam_origin_in_world_poselib - tag_center))
 
-        image_bgr = cv2.polylines(image_bgr, rect_coords, True, (0, 255, 0), 4)
-        cv2.imshow(image_path.name, image_bgr)
-        cv2.waitKey(0)
-        cv2.destroyWindow(image_path.name)
+        if show_images:
+            image_bgr = cv2.polylines(image_bgr, rect_coords, True, (0, 255, 0), 4)
+            cv2.imshow(image_path.name, image_bgr)
+            cv2.waitKey(0)
+            cv2.destroyWindow(image_path.name)
+            
         print('=' * 80)
 
-    cv2.destroyAllWindows()
+    if show_images:
+        cv2.destroyAllWindows()
+
+@click.command()
+@click.argument('transforms_path', type=click.Path(exists=True))
+@click.option('--images_path', type=Optional[click.Path(exists=True)], default=None)
+@click.option('--show_images', default=True)
+def main(
+    transforms_path: str,
+    images_path: Optional[str],
+    show_images: bool,
+):
+    if images_path is None:
+        images_path = Path(transforms_path).parent
+    run_estimates(images_path, transforms_path, show_images)
+
+
+if __name__ == "__main__":
+    main()

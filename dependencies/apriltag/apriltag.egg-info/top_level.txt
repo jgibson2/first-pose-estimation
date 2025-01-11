@@ -1,1 +1,1 @@
-pyapriltag
+apriltag

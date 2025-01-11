@@ -1,1 +1,3 @@
 dependencies/*/build/
+dependencies/*/*.so
+dependencies/*/*.so.*
