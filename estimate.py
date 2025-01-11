@@ -12,7 +12,10 @@ from scipy.spatial.transform import Rotation
 TAG_HALF_WIDTH = 0.08255 # half of 6.5 in in meters
 
 def run_estimates(images_path, transforms_path, show_images):
-    for image_path in sorted(list(images_path.glob('*.jpg')).extend( images_path.glob('*.png'))):
+    images_list = []
+    images_list.extend(images_path.glob('*.jpg'))
+    images_list.extend(images_path.glob('*.png'))
+    for image_path in sorted(images_list):
         print(f'Processing image {image_path.name}')
         image = cv2.imread(str(image_path.absolute()), cv2.IMREAD_GRAYSCALE)
         image_bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)

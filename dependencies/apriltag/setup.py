@@ -3,6 +3,7 @@ import re
 import sys
 import platform
 import subprocess
+import tempfile
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -33,10 +34,12 @@ class CMakeBuild(build_ext):
 
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DPython_EXECUTABLE=' + sys.executable,
-                      '-DPYTHON_PACKAGE=ON']
+        cmake_args = [
+                      # '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DPython3_ROOT_DIR=' + sys.prefix,
+                      '-DPython3_FIND_STRATEGY=LOCATION',
+                      '-DPython3_FIND_VIRTUALENV=FIRST',
+                     ]
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -46,7 +49,7 @@ class CMakeBuild(build_ext):
                 cmake_toolchain_file = os.environ.get('CMAKE_TOOLCHAIN_FILE')
                 # print(f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}')
                 cmake_args += [f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}']
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            # cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2**32:
                 if os.environ.get('CMAKE_TOOLCHAIN_FILE') is not None:
                     cmake_args += ['-DVCPKG_TARGET_TRIPLET=x64-windows']
@@ -61,12 +64,14 @@ class CMakeBuild(build_ext):
             env.get('CXXFLAGS', ''),
             self.distribution.get_version()
         )
+        print(' '.join(['cmake', ext.sourcedir] + cmake_args))
+        print(' '.join(['cmake', '--build', '.'] + build_args))
+        print('Build dir: ', os.path.abspath(self.build_temp))
+        self.build_temp = os.path.abspath(self.build_temp)
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        print(['cmake', ext.sourcedir] + cmake_args)
-        print(build_args)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp, env=env)
 
 
 

@@ -24,10 +24,10 @@ cmake .. && make -j8
 cd ../../..
 # build the Python packages
 cd dependencies/apriltag
-python -m pip install .
+python -m pip install . --no-build-isolation --verbose
 cd ../..
 cd dependencies/PoseLib
-python -m pip install .
+python -m pip install . --no-build-isolation --verbose
 cd ../..
 ```
 

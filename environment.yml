@@ -2,7 +2,7 @@ name: first
 channels:
     - conda-forge
 dependencies:
-    - python
+    - python=3.11
     - numpy
     - pillow
     - opencv
@@ -11,3 +11,4 @@ dependencies:
     - pip:
         - onnxruntime
         - click
+        - setuptools

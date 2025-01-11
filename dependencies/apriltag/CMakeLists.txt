@@ -151,7 +151,8 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 # Python wrapper
 option(BUILD_PYTHON_WRAPPER "Builds Python wrapper" ON)
 
-find_package(Python3 QUIET COMPONENTS Development NumPy)
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+message(STATUS "Python3: " ${Python3_EXECUTABLE})
 
 if(BUILD_PYTHON_WRAPPER AND Python3_Development_FOUND AND Python3_NumPy_FOUND)
 
@@ -172,13 +173,13 @@ if(BUILD_PYTHON_WRAPPER AND Python3_Development_FOUND AND Python3_NumPy_FOUND)
     set(apriltag_py_target "apriltag.${Python3_SOABI}")
     Python3_add_library(${apriltag_py_target} MODULE ${CMAKE_CURRENT_SOURCE_DIR}/apriltag_pywrap.c)
     add_dependencies(${apriltag_py_target} apriltag_py_docstrings)
-    target_link_libraries(${apriltag_py_target} PRIVATE apriltag Python3::Python Python3::NumPy)
+    target_link_libraries(${apriltag_py_target} PRIVATE apriltag Python3::NumPy)
     target_include_directories(${apriltag_py_target} PRIVATE ${PROJECT_BINARY_DIR})
 
     set(PY_DEST ${CMAKE_INSTALL_PREFIX}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages/)
     install(TARGETS ${apriltag_py_target} LIBRARY DESTINATION ${PY_DEST})
 elseif(BUILD_PYTHON_WRAPPER)
-    message(WARNING
+    message(FATAL_ERROR
         "Python bindings requested (BUILD_PYTHON_WRAPPER=ON) but Development and NumPy not found. "
         "Python bindings will not be built. Set BUILD_PYTHON_WRAPPER=OFF to silent this warnings."
      )
