@@ -35,7 +35,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = [
-                      # '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPython3_ROOT_DIR=' + sys.prefix,
                       '-DPython3_FIND_STRATEGY=LOCATION',
                       '-DPython3_FIND_VIRTUALENV=FIRST',
@@ -49,7 +49,7 @@ class CMakeBuild(build_ext):
                 cmake_toolchain_file = os.environ.get('CMAKE_TOOLCHAIN_FILE')
                 # print(f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}')
                 cmake_args += [f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}']
-            # cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2**32:
                 if os.environ.get('CMAKE_TOOLCHAIN_FILE') is not None:
                     cmake_args += ['-DVCPKG_TARGET_TRIPLET=x64-windows']
